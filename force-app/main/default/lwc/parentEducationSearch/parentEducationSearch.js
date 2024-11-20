@@ -240,7 +240,6 @@ export default class parentEducationSearch extends LightningElement {
 
         this.filterData();
     }
-
     filterData() {
         if (!this.valueCategory && !this.valueProgram && !this.valueEmployee) {
             // 모든 검색 조건이 비어있으면 전체 데이터 표시
@@ -249,61 +248,36 @@ export default class parentEducationSearch extends LightningElement {
             return;
         }
     
-        this.displayData = this.data
-            .map(item => {
-                const categoryMatch = !this.valueCategory || 
-                    item.category.toLowerCase().includes(this.valueCategory.toLowerCase());
-                const programMatch = !this.valueProgram || 
-                    item.programName.toLowerCase().includes(this.valueProgram.toLowerCase());
+        // 조건에 맞는 데이터만 필터링
+        const filterItem = (item) => {
+            const categoryMatch = !this.valueCategory || 
+                item.category.toLowerCase().includes(this.valueCategory.toLowerCase());
+            const programMatch = !this.valueProgram || 
+                item.programName.toLowerCase().includes(this.valueProgram.toLowerCase());
     
-                // employeeNames 필터링
-                const filteredEmployeeNames = !this.valueEmployee
-                    ? item.employeeNames
-                    : item.employeeNames
-                        .split(',') //콤마 분리
-                        .map(name => name.trim()) // 공백 제거
-                        .filter(name => name.toLowerCase().includes(this.valueEmployee.toLowerCase())); // 입력값을 포함하는지 매칭
+            const filteredEmployeeNames = !this.valueEmployee
+                ? item.employeeNames
+                : item.employeeNames
+                    .split(',')
+                    .map(name => name.trim())
+                    .filter(name => name.toLowerCase().includes(this.valueEmployee.toLowerCase()));
     
-                // 조건에 맞는 직원 이름이 없다면 제외
-                if (!categoryMatch || !programMatch || filteredEmployeeNames.length === 0) {
-                    return null;
-                }
+            if (!categoryMatch || !programMatch || filteredEmployeeNames.length === 0) {
+                return false;
+            }
     
-                // 조건에 맞는 데이터를 새로운 employeeNames로 재구성
-                return { ...item, employeeNames: filteredEmployeeNames.join(', ') };
-            })
-            .filter(item => item !== null); // null 값 제거
+            // 조건에 맞는 데이터를 새로운 employeeNames로 재구성
+            if (this.valueEmployee) {
+                item.employeeNames = filteredEmployeeNames.join(', ');
+            }
+            return true;
+        };
     
-        this.displayData2 = this.data2
-            .map(item => {
-                const categoryMatch = !this.valueCategory || 
-                    item.category.toLowerCase().includes(this.valueCategory.toLowerCase());
-                const programMatch = !this.valueProgram || 
-                    item.programName.toLowerCase().includes(this.valueProgram.toLowerCase());
-    
-                console.log('item: ' + JSON.stringify(item));
-                console.log('item.employeeNames: ' + item.employeeNames);
-    
-                // employeeNames 필터링
-                const filteredEmployeeNames = !this.valueEmployee
-                    ? item.employeeNames
-                    : item.employeeNames
-                        .split(',')
-                        .map(name => name.trim())
-                        .filter(name => name.toLowerCase().includes(this.valueEmployee.toLowerCase()));
-    
-                console.log('Filtered Names: ' + filteredEmployeeNames);
-    
-                // 조건에 맞는 직원 이름이 없다면 제외
-                if (!categoryMatch || !programMatch || filteredEmployeeNames.length === 0) {
-                    return null;
-                }
-    
-                // 조건에 맞는 데이터를 새로운 employeeNames로 재구성
-                return { ...item, employeeNames: filteredEmployeeNames.join(', ') };
-            })
-            .filter(item => item !== null); // null 값 제거
+        // 필터링 적용
+        this.displayData = this.data.filter(filterItem);
+        this.displayData2 = this.data2.filter(filterItem);
     }
+    
     
 
     handleRefresh(){
